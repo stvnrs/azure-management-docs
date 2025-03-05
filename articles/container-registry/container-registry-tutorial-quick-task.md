@@ -181,6 +181,16 @@ AKV_NAME=$ACR_NAME-vault
 az keyvault create --resource-group $RES_GROUP --name $AKV_NAME
 ```
 
+If your account doesn't have the RBAC 'Key Vault Secrets Officer' role at a higher scope e.g. resource group or subscription, grant access using the following command. (change <userPrincipalName> to youyr 
+user principal name dave@example.com)
+
+```azurecli
+az role assignment create \
+  --assignee <userPrincipalName> \
+  --role 'Key Vault Secrets Officer' \
+  --scope $(az keyvault show --resource-group $RES_GROUP --name $AKV_NAME --query "id" --output 'tsv')
+```
+
 #### Create a service principal and store credentials
 
 You now need to create a service principal and store its credentials in your key vault.

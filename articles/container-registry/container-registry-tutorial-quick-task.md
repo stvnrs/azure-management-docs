@@ -223,6 +223,18 @@ You can now reference these secrets by name when you or your applications and se
 
 Now that the service principal credentials are stored as Azure Key Vault secrets, your applications and services can use them to access your private registry.
 
+Note: The SP create above must have acrpull role on the registry
+
+Execute the following [az role assignment][az-container-create] to grant the acrpull role.
+
+```azurecli
+az role assignment create `
+   --assignee-object-id $(az ad sp list --display-name $ACR_NAME-pull --query [].id --output tsv) `
+   --assignee-principal-type 'ServicePrincipal' `
+   --role 'acrpull' `
+   --scope "/subscriptions/$SUBSCRIPTION_ID/resourceGroups/$RES_GROUP/providers/Microsoft.ContainerRegistry/registries/$ACR_NAME" --query "name" --output tsv
+```
+
 Execute the following [az container create][az-container-create] command to deploy a container instance. The command uses the service principal's credentials stored in Azure Key Vault to authenticate to your container registry.
 
 ```azurecli
@@ -234,6 +246,8 @@ az container create \
     --registry-username $(az keyvault secret show --vault-name $AKV_NAME --name $ACR_NAME-pull-usr --query value -o tsv) \
     --registry-password $(az keyvault secret show --vault-name $AKV_NAME --name $ACR_NAME-pull-pwd --query value -o tsv) \
     --dns-name-label acr-tasks-$ACR_NAME \
+    --cpu 1 \
+    --memory 1 \
     --query "{FQDN:ipAddress.fqdn}" \
     --output table
 ```
